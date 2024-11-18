@@ -8,12 +8,13 @@ use Illuminate\Database\Eloquent\Model;
 class Map extends Model
 {
     use HasFactory;
-    protected $table = 'maps';//nombre del modelo
+    protected $table = 'map';//nombre del modelo
     protected $fillable = [ //campos alterables
-        'name',
+        'post',
+        'title',
         'description',
         'author',
-        'date',
+        'urlDashboard',
         'place'
     ];
 }

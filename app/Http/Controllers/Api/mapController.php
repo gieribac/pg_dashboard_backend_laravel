@@ -32,11 +32,12 @@ class mapController extends Controller
     public function store(Request $request){
         //validar con Validator
         $validator = Validator::make($request->all(),[
-            'name'=>'required',
-            'description'=>'required',
-            'author'=>'required',
-            'date'=>'required',
-            'place'=>'required',
+            'post'=>'post',
+            'title'=>'title',
+            'description'=>'description',
+            'author'=>'author',
+            'urlDashboard'=>'urlDashboard',
+            'place'=>'place'
         ]);
         if ($validator->fails()){
             $data = [
@@ -47,10 +48,11 @@ class mapController extends Controller
             return response()->json($data,400);
         }
         $map = Map::create([
-            'name'=>$request->name,
+            'post'=>$request->post,
+            'title'=>$request->title,
             'description'=>$request->description,
             'author'=>$request->author,
-            'date'=>$request->date,
+            'urlDashboard'=>$request->urlDashboard,
             'place'=>$request->place,
         ]);
         if (!$map){
@@ -111,10 +113,11 @@ class mapController extends Controller
         }
         //validar con Validator
         $validator = Validator::make($request->all(),[
-            'name'=>'required',
+            'post'=>'required',
+            'title'=>'required',
             'description'=>'required',
             'author'=>'required',
-            'date'=>'required',
+            'urlDashboard'=>'required',
             'place'=>'required',
         ]);
         if ($validator->fails()){
@@ -125,10 +128,11 @@ class mapController extends Controller
             ];
             return response()->json($data,400);
         }
-        $map->name = $request->name;
+        $map->post = $request->post;
+        $map->title = $request->title;
         $map->description =$request->description;
         $map->author = $request->author;
-        $map->date = $request->date;
+        $map->urlDashboard = $request->urlDashboard;
         $map->place = $request->place;
         $map->save();
         
@@ -150,10 +154,11 @@ class mapController extends Controller
             return response()->json($data,404);
         }
 
-        if($request->has('name')){ $map->name = $request->name;}
+        if($request->has('post')){ $map->post = $request->post;}
+        if($request->has('title')){ $map->title = $request->title;}
         if($request->has('description')){ $map->description =$request->description;}
         if($request->has('author')){ $map->author = $request->author;}
-        if($request->has('date')){ $map->date = $request->date;}
+        if($request->has('urlDashboard')){ $map->urlDashboard = $request->urlDashboard;}
         if($request->has('place')){ $map->place = $request->place;}
         $map->save();
         
