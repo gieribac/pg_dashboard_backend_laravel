@@ -28,15 +28,15 @@ class mapController extends Controller
         return response()->json($maps,200);
     }
 
-    //read bd
+    //write bd
     public function store(Request $request){
         //validar con Validator
         $validator = Validator::make($request->all(),[
-            'post'=>'post',
-            'title'=>'title',
-            'description'=>'description',
-            'author'=>'author',
-            'urlDashboard'=>'urlDashboard',
+            'post'=>'required',
+            'title'=>'required',
+            'description'=>'required',
+            'author'=>'required',
+            'urlDashboard'=>'required|unique:map',
             'place'=>'place'
         ]);
         if ($validator->fails()){

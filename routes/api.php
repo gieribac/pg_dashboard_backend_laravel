@@ -1,6 +1,7 @@
 <?php
 
-use Illuminate\Http\Request;
+require __DIR__ . '/admin.php';
+
 use Illuminate\Support\Facades\Route;
 
 use App\Http\Controllers\Api\mapController;
