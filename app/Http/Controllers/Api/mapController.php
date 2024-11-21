@@ -6,10 +6,9 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Map;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\ValidationException;
 
-use function PHPSTORM_META\map;
-
-class mapController extends Controller
+class MapController extends Controller
 {
     //query bd
     public function index(){
@@ -37,7 +36,7 @@ class mapController extends Controller
             'description'=>'required',
             'author'=>'required',
             'urlDashboard'=>'required|unique:map',
-            'place'=>'place'
+            'place'=>'required'
         ]);
         if ($validator->fails()){
             $data = [
@@ -117,7 +116,7 @@ class mapController extends Controller
             'title'=>'required',
             'description'=>'required',
             'author'=>'required',
-            'urlDashboard'=>'required',
+            'urlDashboard'=>'required|unique:map',
             'place'=>'required',
         ]);
         if ($validator->fails()){
@@ -153,15 +152,42 @@ class mapController extends Controller
             ];
             return response()->json($data,404);
         }
+        try{    
+            $validatedData = $request->validate([
+                'post'=>'nullable',
+                'title'=>'nullable',
+                'description'=>'nullable',
+                'author'=>'nullable',
+                'urlDashboard'=>'unique:map|nullable',
+                'place'=>'nullable',
+            ]);
+        } catch (ValidationException $e) {
+            return response()->json([
+                'message' => 'Error de validación',
+                'errors' => $e->errors(),
+                'status' => 400
+            ], 400);
+        }
+        // Actualizar solo los campos presentes
+        if ($request->filled('post')) {
+            $map->post = $validatedData['post'];
+        }
+        if ($request->filled('title')) {
+            $map->title = $validatedData['title'];
+        }
+        if ($request->filled('description')) {
+            $map->description = $validatedData['description'];
+        }
+        if ($request->filled('author')) {
+            $map->author = $validatedData['author'];
+        }
+        if ($request->filled('urlDashboard')) {
+            $map->urlDashboard = $validatedData['urlDashboard'];
+        }
+        if ($request->filled('place')) {
+            $map->place = $validatedData['place'];
+        }
 
-        if($request->has('post')){ $map->post = $request->post;}
-        if($request->has('title')){ $map->title = $request->title;}
-        if($request->has('description')){ $map->description =$request->description;}
-        if($request->has('author')){ $map->author = $request->author;}
-        if($request->has('urlDashboard')){ $map->urlDashboard = $request->urlDashboard;}
-        if($request->has('place')){ $map->place = $request->place;}
-        $map->save();
-        
         $data = [
             'messaje' => 'Dashboard actualizado',
             'map' => $map,

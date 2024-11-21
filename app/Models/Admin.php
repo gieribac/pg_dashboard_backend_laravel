@@ -14,6 +14,7 @@ class Admin extends Model
         'no_doc',
         'email',
         'username',
-        'password'
+        'password',
+        'main'
     ];
 }
