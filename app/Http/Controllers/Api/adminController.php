@@ -68,7 +68,7 @@ class AdminController extends Controller
         $admin = Admin::find($id);
         if(!$admin){
             $data = [
-                'messaje' => 'Dashboard no encontrado',
+                'messaje' => 'Dashboard no encontrados',
                 'status' => 404
             ];
             return response()->json($data,404);

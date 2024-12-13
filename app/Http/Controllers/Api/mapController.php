@@ -150,23 +150,25 @@ class MapController extends Controller
         return response()->json($data,200);
     }
     //actualizar un registro parcialmente
-    public function updatePartial(Request $request, $id){
+    public function updatePartial(Request $request, $id)
+    {
         $map = Map::find($id);
-        if(!$map){
+        if (!$map) {
             $data = [
-                'messaje' => 'Dashboard no encontrado',
+                'message' => 'Dashboard no encontrado',
                 'status' => 404
             ];
-            return response()->json($data,404);
+            return response()->json($data, 404);
         }
-        try{    
+    
+        try {
             $validatedData = $request->validate([
-                'post'=>'nullable',
-                'title'=>'nullable',
-                'description'=>'nullable',
-                'author'=>'nullable',
-                'urlDashboard'=>'unique:map|nullable',
-                'place'=>'nullable',
+                'post' => 'nullable|boolean',
+                'title' => 'nullable|string|max:255',
+                'description' => 'nullable|string',
+                'author' => 'nullable|string|max:255',
+                'urlDashboard' => 'nullable|string|unique:map,urlDashboard,' . $id,
+                'place' => 'nullable|string|max:255',
             ]);
         } catch (ValidationException $e) {
             return response()->json([
@@ -175,6 +177,7 @@ class MapController extends Controller
                 'status' => 400
             ], 400);
         }
+    
         // Actualizar solo los campos presentes
         if ($request->filled('post')) {
             $map->post = $validatedData['post'];
@@ -194,13 +197,17 @@ class MapController extends Controller
         if ($request->filled('place')) {
             $map->place = $validatedData['place'];
         }
-
+    
+        // Guardar los cambios en la base de datos
+        $map->save();
+    
         $data = [
-            'messaje' => 'Dashboard actualizado',
+            'message' => 'Dashboard actualizado',
             'map' => $map,
             'status' => 200
         ];
-        return response()->json($data,200);
+        return response()->json($data, 200);
     }
+    
 }
 
