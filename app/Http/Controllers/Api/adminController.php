@@ -68,7 +68,7 @@ class AdminController extends Controller
         $admin = Admin::find($id);
         if(!$admin){
             $data = [
-                'messaje' => 'Dashboard no encontrados',
+                'messaje' => 'Datos no encontrados',
                 'status' => 404
             ];
             return response()->json($data,404);
@@ -84,14 +84,14 @@ class AdminController extends Controller
         $admin = Admin::find($id);
         if(!$admin){
             $data = [
-                'messaje' => 'Dashboard no encontrado',
+                'messaje' => 'Datos no encontrados',
                 'status' => 404
             ];
             return response()->json($data,404);
         }
         $admin->delete();
         $data = [
-            'map' => 'Dashboard eliminado',
+            'map' => 'Datos eliminados',
             'status' => 200
         ];
         return response()->json($data,200);
@@ -101,7 +101,7 @@ class AdminController extends Controller
         $admin = Admin::find($id);
         if(!$admin){
             $data = [
-                'messaje' => 'Dashboard no encontrado',
+                'messaje' => 'Datos no encontrados',
                 'status' => 404
             ];
             return response()->json($data,404);
@@ -133,7 +133,7 @@ class AdminController extends Controller
         $admin->save();
          
         $data = [
-            'messaje' => 'Dashboard actualizado',
+            'messaje' => 'Datos actualizados',
             'map' => $admin,
             'status' => 200
         ];
@@ -144,7 +144,7 @@ class AdminController extends Controller
         $admin = Admin::find($id);
         if(!$admin){
             $data = [
-                'messaje' => 'Dashboard no encontrado',
+                'messaje' => 'Datos no encontrados',
                 'status' => 404
             ];
             return response()->json($data,404);
@@ -191,7 +191,7 @@ class AdminController extends Controller
         }
         
         $data = [
-            'messaje' => 'Dashboard actualizado',
+            'messaje' => 'Datos actualizados',
             'map' => $admin,
             'status' => 200
         ];
