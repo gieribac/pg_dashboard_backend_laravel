@@ -13,6 +13,8 @@ return new class extends Migration
     {
         Schema::create('authorization', function (Blueprint $table) {
             $table->id();
+            $table->string('no_doc')->unique();
+            $table->string('email')->unique();
             $table->timestamps();
         });
     }

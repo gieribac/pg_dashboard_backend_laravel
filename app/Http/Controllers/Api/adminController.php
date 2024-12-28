@@ -2,11 +2,12 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 use App\Models\Admin;
-use Illuminate\Support\Facades\Validator;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
 
 class AdminController extends Controller
@@ -25,43 +26,68 @@ class AdminController extends Controller
     }
 
     public function store(Request $request){
-        //validar con Validator
-        $validator = Validator::make($request->all(),[
-            'name'=>'required',
-            'no_doc'=>'required',
-            'email'=>'required|email|unique:admin',
-            'username'=>'required|unique:admin',
-            'password'=>'required|unique:admin',
-            'main'=>'nullable|boolean' // Campo opcional
-        ]);
-        if ($validator->fails()){
-            $data = [
-                'messaje' => 'Error en la validacion de los datos',
-                'errors' => $validator->errors(),
-                'status' => 200
-            ];
-            return response()->json($data,400);
-        }
-        $admi = Admin::create([
-            'name'=>$request->name,
-            'no_doc'=>$request->no_doc,
-            'email'=>$request->email,
-            'username'=>$request->username,
-            'password'=> Hash::make($request->input('password')), 
-            'main' => $request->boolean('main')            
-        ]);
-        if (!$admi){
-            $data = [
-                'messaje' => 'Error en la carga de los datos',
-                'status' => 500
-            ];
-            return response()->json($data,500);
-        }
+    // Validar los datos proporcionados
+    $validator = Validator::make($request->all(), [
+        'name' => 'required',
+        'no_doc' => 'required',
+        'email' => 'required|email|unique:admin',
+        'username' => 'required|unique:admin',
+        'password' => 'required|unique:admin',
+        'main' => 'nullable|boolean' // Campo opcional
+    ]);
+
+    if ($validator->fails()) {
         $data = [
-            'admi' => $admi,
-            'status' => 201
+            'message' => 'Error en la validación de los datos',
+            'errors' => $validator->errors(),
+            'status' => 400
         ];
-        return response()->json($data,201);
+        return response()->json($data, 400);
+    }
+
+    // Verificar el requisito de "no_doc" en la tabla authorization si main es falso o no se proporciona
+    if (!$request->boolean('main')) {
+        $noDocExists = DB::table('authorization')->where('no_doc', $request->no_doc)->exists();
+        $emailExists = DB::table('authorization')->where('email', $request->email)->exists();
+
+        if (!$noDocExists) {
+            return response()->json([
+                'message' => 'El documento no está autorizado.',
+                'status' => 403
+            ], 403);
+        }
+        if (!$emailExists) {
+            return response()->json([
+                'message' => 'Dirección de correo no autorizado.',
+                'status' => 403
+            ], 403);
+        }
+    }
+
+    // Crear el registro de admin
+    $admin = Admin::create([
+        'name' => $request->name,
+        'no_doc' => $request->no_doc,
+        'email' => $request->email,
+        'username' => $request->username,
+        'password' => Hash::make($request->password),
+        'main' => $request->boolean('main') // Convertir a booleano explícitamente
+    ]);
+
+    if (!$admin) {
+        $data = [
+            'message' => 'Error al crear el registro de administrador.',
+            'status' => 500
+        ];
+        return response()->json($data, 500);
+    }
+
+    // Responder con éxito
+    $data = [
+        'admin' => $admin,
+        'status' => 201
+    ];
+    return response()->json($data, 201);
     }
 
     public function show($id){
