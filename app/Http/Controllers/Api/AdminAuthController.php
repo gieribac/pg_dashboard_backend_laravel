@@ -73,4 +73,37 @@ class AdminAuthController extends Controller
         $admin = JWTAuth::user();
         return response()->json(['admin' => $admin]);
     }
+    
+    public function updatePassword(Request $request, $id)
+    {
+        // Validar los datos del request
+        $validated = $request->validate([
+            'pass1' => 'required|string',
+            'pass2' => 'required|string|unique:admin,password',
+        ]);
+
+        // Buscar el registro por ID
+        $admin = Admin::find($id);
+
+        if (!$admin) {
+            return response()->json([
+                'message' => 'Usuario no encontrado.',
+            ], 404);
+        }
+
+        // Verificar que pass1 coincida con la contraseña guardada
+        if (!Hash::check($validated['pass1'], $admin->password)) {
+            return response()->json([
+                'message' => 'La contraseña de verificación no coincide.',
+            ], 403);
+        }
+
+        // Actualizar la contraseña
+        $admin->password = Hash::make($validated['pass2']);
+        $admin->save();
+
+        return response()->json([
+            'message' => 'Contraseña actualizada exitosamente.',
+        ], 200);
+    }
 }

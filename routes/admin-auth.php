@@ -6,6 +6,7 @@ Route::prefix('adminlog')->group(function () {
     Route::post('login', [AdminAuthController::class, 'login']);
     Route::post('logout', [AdminAuthController::class, 'logout'])->middleware('jwt.auth');
     Route::get('me', [AdminAuthController::class, 'me'])->middleware('jwt.auth');
+    Route::patch('update-password', [AdminAuthController::class, 'updatePassword'])->middleware('jwt.auth');
 });
 // administradores
 // 1
