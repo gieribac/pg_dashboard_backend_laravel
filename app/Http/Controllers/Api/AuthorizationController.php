@@ -69,4 +69,23 @@ class AuthorizationController extends Controller
             'message' => 'Registro eliminado exitosamente',
         ], 200);
     }
+    /**
+     * Verifica si existe una coincidencia en la tabla 'authorization' 
+     * para los campos 'no_doc' y 'email'.
+     */
+    public function checkAuthorization(Request $request)
+    {
+        $validatedData = $request->validate([
+            'no_doc' => 'required|string',
+            'email' => 'required|email',
+        ]);
+
+        // Buscar coincidencia en la tabla `authorization`
+        $exists = DB::table('authorization')
+            ->where('no_doc', $validatedData['no_doc'])
+            ->where('email', $validatedData['email'])
+            ->exists();
+
+        return response()->json(['found' => $exists]);
+    }
 }

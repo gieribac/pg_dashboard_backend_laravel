@@ -49,7 +49,11 @@ class Admin extends Authenticatable implements JWTSubject
     public function getJWTCustomClaims()
     {
         return [
-            'main'=>$this->main
+            'main'=>$this->main,
+            'name'=>$this->name,
+            'no_doc'=>$this->no_doc,
+            'email'=>$this->email,
+            'username'=>$this->username
         ];
     }
 }

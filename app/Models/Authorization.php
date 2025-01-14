@@ -12,3 +12,4 @@ class Authorization extends Model
         'email',
     ];
 }
+

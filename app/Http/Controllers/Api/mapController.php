@@ -167,7 +167,7 @@ class MapController extends Controller
                 'title' => 'nullable|string|max:255',
                 'description' => 'nullable|string',
                 'author' => 'nullable|string|max:255',
-                'urlDashboard' => 'nullable|string|unique:map,urlDashboard,' . $id,
+                'urlDashboard' => 'nullable|string',
                 'place' => 'nullable|string|max:255',
             ]);
         } catch (ValidationException $e) {
