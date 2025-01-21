@@ -26,7 +26,7 @@ class AdminController extends Controller
     }
 
     public function store(Request $request){
-    // Validar los datos proporcionados
+    // Validar los datos proporcionados  
     $validator = Validator::make($request->all(), [
         'name' => 'required',
         'no_doc' => 'required',
@@ -221,6 +221,7 @@ class AdminController extends Controller
             'map' => $admin,
             'status' => 200
         ];
+        $admin->save();
         return response()->json($data,200);
     }
 }
