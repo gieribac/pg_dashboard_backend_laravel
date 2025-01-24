@@ -3,10 +3,10 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AdminAuthController;
 
 Route::prefix('adminlog')->group(function () {
-    Route::post('login', [AdminAuthController::class, 'login']);
-    Route::post('logout', [AdminAuthController::class, 'logout'])->middleware('jwt.auth');
-    Route::get('me', [AdminAuthController::class, 'me'])->middleware('jwt.auth');
-    Route::patch('update-password', [AdminAuthController::class, 'updatePassword'])->middleware('jwt.auth');;
+    Route::post('/login', [AdminAuthController::class, 'login']);
+    Route::post('/logout', [AdminAuthController::class, 'logout'])->middleware('jwt.auth');
+    Route::get('/me', [AdminAuthController::class, 'me'])->middleware('jwt.auth');
+    Route::patch('/updatepassword', [AdminAuthController::class, 'updatePassword'])->middleware('jwt.auth');;
 });
 // administradores
 // 1

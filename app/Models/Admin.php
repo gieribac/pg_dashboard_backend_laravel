@@ -17,6 +17,7 @@ class Admin extends Authenticatable implements JWTSubject
         'password',
         'main'
     ];
+    
     /**
      * The attributes that should be hidden for serialization.
      *

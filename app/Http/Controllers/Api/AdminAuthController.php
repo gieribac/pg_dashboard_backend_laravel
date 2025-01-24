@@ -74,36 +74,43 @@ class AdminAuthController extends Controller
         return response()->json(['admin' => $admin]);
     }
     
-    public function updatePassword(Request $request, $id)
-    {
-        // Validar los datos del request
-        $validated = $request->validate([
-            'pass1' => 'required|string',
-            'pass2' => 'required|string|unique:admin,password',
-        ]);
+    public function updatePassword(Request $request)
+{
+    // Obtener el usuario autenticado desde el token JWT
+    $admin = JWTAuth::user();
 
-        // Buscar el registro por ID
-        $admin = Admin::find($id);
-
-        if (!$admin) {
-            return response()->json([
-                'message' => 'Usuario no encontrado.',
-            ], 404);
-        }
-
-        // Verificar que pass1 coincida con la contraseña guardada
-        if (!Hash::check($validated['pass1'], $admin->password)) {
-            return response()->json([
-                'message' => 'La contraseña de verificación no coincide.',
-            ], 403);
-        }
-
-        // Actualizar la contraseña
-        $admin->password = Hash::make($validated['pass2']);
-        $admin->save();
-
+    if (!$admin) {
         return response()->json([
-            'message' => 'Contraseña actualizada exitosamente.',
-        ], 200);
+            'message' => 'Usuario no autenticado.',
+        ], 401);
     }
+
+    // Validar los datos del request
+    $validated = $request->validate([
+        'pass1' => 'required|string',
+        'pass2' => 'required|string',
+    ]);
+
+    // Verificar que pass1 coincida con la contraseña guardada
+    if (!Hash::check($validated['pass1'], $admin->password)) {
+        return response()->json([
+            'message' => 'La contraseña de verificación no coincide.',
+        ], 403);
+    }
+     // Verificar si pass1 y pass2 son iguales (antes de hashearlas)
+    if ($validated['pass1'] === $validated['pass2']) {
+        return response()->json([
+            'message' => 'La nueva contraseña no puede ser igual a la actual.',
+        ], 422);
+    }
+
+    // Actualizar la contraseña
+    $admin->password = Hash::make($validated['pass2']);
+    $admin->save();
+
+    return response()->json([
+        'message' => 'Contraseña actualizada exitosamente.',
+    ], 200);
+}
+
 }

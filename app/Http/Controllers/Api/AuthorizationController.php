@@ -81,8 +81,8 @@ class AuthorizationController extends Controller
         ]);
 
         // Buscar coincidencia en la tabla `authorization`
-        $exists = DB::table('authorization')
-            ->where('no_doc', $validatedData['no_doc'])
+        $exists =  Authorization::
+            where('no_doc', $validatedData['no_doc'])
             ->where('email', $validatedData['email'])
             ->exists();
 
