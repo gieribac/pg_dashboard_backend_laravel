@@ -75,42 +75,82 @@ class AdminAuthController extends Controller
     }
     
     public function updatePassword(Request $request)
-{
-    // Obtener el usuario autenticado desde el token JWT
-    $admin = JWTAuth::user();
+    {
+        // Obtener el usuario autenticado desde el token JWT
+        $admin = JWTAuth::user();
 
-    if (!$admin) {
+        if (!$admin) {
+            return response()->json([
+                'message' => 'Usuario no autenticado.',
+            ], 401);
+        }
+
+        // Validar los datos del request
+        $validated = $request->validate([
+            'pass1' => 'required|string',
+            'pass2' => 'required|string|unique:admin,password',
+        ]);
+
+        // Verificar que pass1 coincida con la contraseña guardada
+        if (!Hash::check($validated['pass1'], $admin->password)) {
+            return response()->json([
+                'message' => 'La contraseña de verificación no coincide.',
+            ], 403);
+        }
+        // Verificar si pass1 y pass2 son iguales (antes de hashearlas)
+        if ($validated['pass1'] === $validated['pass2']) {
+            return response()->json([
+                'message' => 'La nueva contraseña no puede ser igual a la actual.',
+            ], 422);
+        }
+        $this->logout();
+        // Actualizar la contraseña
+        $admin->password = Hash::make($validated['pass2']);
+        $admin->save();
+        
         return response()->json([
-            'message' => 'Usuario no autenticado.',
-        ], 401);
+            'message' => 'Contraseña actualizada exitosamente.',
+        ], 200);
     }
+    //borrar un registro de admin
+    
+    public function destroy(Request $request, $id)
+    {
+        // Buscar el administrador por ID
+        $admin = Admin::find($id);
 
-    // Validar los datos del request
-    $validated = $request->validate([
-        'pass1' => 'required|string',
-        'pass2' => 'required|string',
-    ]);
+        if (!$admin) {
+            return response()->json([
+                'message' => 'Usuario no encontrado.',
+            ], 404);
+        }
 
-    // Verificar que pass1 coincida con la contraseña guardada
-    if (!Hash::check($validated['pass1'], $admin->password)) {
+        // Validar la contraseña proporcionada en el request
+        $validated = $request->validate([
+            'password' => 'required|string',
+        ]);
+
+        // Verificar que la contraseña proporcionada coincida con la contraseña almacenada
+        if (!Hash::check($validated['password'], $admin->password)) {
+            return response()->json([
+                'message' => 'La contraseña de verificación no coincide.',
+            ], 403);
+        }
+
+        if ($admin->id !== JWTAuth::user()->id) {
+            return response()->json([
+                'message' => 'No tienes permiso para realizar esta acción.',
+            ], 403);
+        }
+
+        $this->logout();
+        // Eliminar el administrador
+        $admin->delete();
+        // Respuesta clara al cliente
         return response()->json([
-            'message' => 'La contraseña de verificación no coincide.',
-        ], 403);
+            'message' => 'Cuenta eliminada exitosamente.',
+            'status' => 200,
+        ], 200);
     }
-     // Verificar si pass1 y pass2 son iguales (antes de hashearlas)
-    if ($validated['pass1'] === $validated['pass2']) {
-        return response()->json([
-            'message' => 'La nueva contraseña no puede ser igual a la actual.',
-        ], 422);
-    }
-
-    // Actualizar la contraseña
-    $admin->password = Hash::make($validated['pass2']);
-    $admin->save();
-
-    return response()->json([
-        'message' => 'Contraseña actualizada exitosamente.',
-    ], 200);
-}
 
 }

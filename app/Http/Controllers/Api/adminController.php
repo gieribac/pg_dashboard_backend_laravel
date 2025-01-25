@@ -26,68 +26,68 @@ class AdminController extends Controller
     }
 
     public function store(Request $request){
-    // Validar los datos proporcionados  
-    $validator = Validator::make($request->all(), [
-        'name' => 'required',
-        'no_doc' => 'required',
-        'email' => 'required|email|unique:admin',
-        'username' => 'required|unique:admin',
-        'password' => 'required|unique:admin',
-        'main' => 'nullable|boolean' // Campo opcional
-    ]);
+        // Validar los datos proporcionados  
+        $validator = Validator::make($request->all(), [
+            'name' => 'required',
+            'no_doc' => 'required|unique:admin,no_doc',
+            'email' => 'required|email|unique:admin,email',
+            'username' => 'required|unique:admin,username',
+            'password' => 'required|string|unique:admin,password',
+            'main' => 'nullable|boolean' // Campo opcional
+        ]);
 
-    if ($validator->fails()) {
-        $data = [
-            'message' => 'Error en la validación de los datos',
-            'errors' => $validator->errors(),
-            'status' => 400
-        ];
-        return response()->json($data, 400);
-    }
-
-    // Verificar el requisito de "no_doc" en la tabla authorization si main es falso o no se proporciona
-    if (!$request->boolean('main')) {
-        $noDocExists = DB::table('authorization')->where('no_doc', $request->no_doc)->exists();
-        $emailExists = DB::table('authorization')->where('email', $request->email)->exists();
-
-        if (!$noDocExists) {
-            return response()->json([
-                'message' => 'El documento no está autorizado.',
-                'status' => 403
-            ], 403);
+        if ($validator->fails()) {
+            $data = [
+                'message' => 'Error en la validación de los datos',
+                'errors' => $validator->errors(),
+                'status' => 400
+            ];
+            return response()->json($data, 400);
         }
-        if (!$emailExists) {
-            return response()->json([
-                'message' => 'Dirección de correo no autorizado.',
-                'status' => 403
-            ], 403);
+
+        // Verificar el requisito de "no_doc" en la tabla authorization si main es falso o no se proporciona
+        if (!$request->boolean('main')) {
+            $noDocExists = DB::table('authorization')->where('no_doc', $request->no_doc)->exists();
+            $emailExists = DB::table('authorization')->where('email', $request->email)->exists();
+
+            if (!$noDocExists) {
+                return response()->json([
+                    'message' => 'El documento no está autorizado.',
+                    'status' => 403
+                ], 403);
+            }
+            if (!$emailExists) {
+                return response()->json([
+                    'message' => 'Dirección de correo no autorizado.',
+                    'status' => 403
+                ], 403);
+            }
         }
-    }
 
-    // Crear el registro de admin
-    $admin = Admin::create([
-        'name' => $request->name,
-        'no_doc' => $request->no_doc,
-        'email' => $request->email,
-        'username' => $request->username,
-        'password' => Hash::make($request->password),
-        'main' => $request->boolean('main') // Convertir a booleano explícitamente
-    ]);
+        // Crear el registro de admin
+        $admin = Admin::create([
+            'name' => $request->name,
+            'no_doc' => $request->no_doc,
+            'email' => $request->email,
+            'username' => $request->username,
+            'password' => Hash::make($request->password),
+            'main' => $request->boolean('main') // Convertir a booleano explícitamente
+        ]);
 
-    if (!$admin) {
+        if (!$admin) {
+            $data = [
+                'message' => 'Error al crear el registro de administrador.',
+                'status' => 500
+            ];
+            return response()->json($data, 500);
+        }
+
+        // Responder con éxito
         $data = [
-            'message' => 'Error al crear el registro de administrador.',
-            'status' => 500
+            'admin' => $admin,
+            'status' => 201
         ];
-        return response()->json($data, 500);
-    }
-
-    // Responder con éxito
-    $data = [
-        'admin' => $admin,
-        'status' => 201
-    ];
-    return response()->json($data, 201);
+        return response()->json($data, 201);
     }
 
     public function show($id){
@@ -105,23 +105,7 @@ class AdminController extends Controller
         ];
         return response()->json($data,200);
     }
-    //borrar un registro
-    public function destroy($id){
-        $admin = Admin::find($id);
-        if(!$admin){
-            $data = [
-                'messaje' => 'Datos no encontrados',
-                'status' => 404
-            ];
-            return response()->json($data,404);
-        }
-        $admin->delete();
-        $data = [
-            'map' => 'Datos eliminados',
-            'status' => 200
-        ];
-        return response()->json($data,200);
-    }
+    
 //actualizar un registro
     public function update(Request $request, $id){
         $admin = Admin::find($id);
@@ -135,10 +119,10 @@ class AdminController extends Controller
         //validar con Validator
         $validator = Validator::make($request->all(),[
             'name'=>'required',
-            'no_doc'=>'required',
-            'email'=>'required|email',
-            'username'=>'required',
-            'password'=>'required|unique:admin',
+            'no_doc'=>'required|unique:admin,no_doc',
+            'email'=>'required|email|unique:admin,email,',
+            'username'=>'required|unique:admin,username',
+            'password'=>'required|unique:admin,password',
             'main'=>'nullable|boolean'
         ]);
         if ($validator->fails()){
@@ -180,10 +164,10 @@ class AdminController extends Controller
             // Validar los datos entrantes
             $validatedData = $request->validate([
                 'name' => 'string|nullable',
-                'no_doc' => 'string|nullable',
-                'email' => 'email|nullable',
-                'username' => 'string|nullable',
-                'password' => 'string|min:8|nullable', // Validar longitud de la contraseña
+                'no_doc' => 'string|nullable|unique:admin,no_doc',
+                'email' => 'email|nullable|unique:admin,email',
+                'username' => 'string|nullable|unique:admin,username',
+                'password' => 'string|min:8|nullable,unique:admin,password', // Validar longitud de la contraseña
                 'main' => 'nullable|boolean'
             ]);
         } catch (ValidationException $e) {
