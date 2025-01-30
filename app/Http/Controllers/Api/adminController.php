@@ -25,69 +25,64 @@ class AdminController extends Controller
         return response()->json($admins,200);
     }
 
-    public function store(Request $request){
-        // Validar los datos proporcionados  
+    public function store(Request $request)
+    {
+        // Validar los datos proporcionados (sin incluir 'main')
         $validator = Validator::make($request->all(), [
             'name' => 'required',
             'no_doc' => 'required|unique:admin,no_doc',
             'email' => 'required|email|unique:admin,email',
             'username' => 'required|unique:admin,username',
-            'password' => 'required|string|unique:admin,password',
-            'main' => 'nullable|boolean' // Campo opcional
+            'password' => 'required|string|unique:admin,password'
         ]);
 
         if ($validator->fails()) {
-            $data = [
+            return response()->json([
                 'message' => 'Error en la validación de los datos',
                 'errors' => $validator->errors(),
                 'status' => 400
-            ];
-            return response()->json($data, 400);
+            ], 400);
         }
 
-        // Verificar el requisito de "no_doc" en la tabla authorization si main es falso o no se proporciona
-        if (!$request->boolean('main')) {
-            $noDocExists = DB::table('authorization')->where('no_doc', $request->no_doc)->exists();
-            $emailExists = DB::table('authorization')->where('email', $request->email)->exists();
+        // Obtener el valor de 'main' desde la tabla 'authorization'
+        $authorization = DB::table('authorization')
+            ->where('no_doc', $request->no_doc)
+            ->where('email', $request->email)
+            ->first(); // Obtener el primer registro coincidente
 
-            if (!$noDocExists) {
-                return response()->json([
-                    'message' => 'El documento no está autorizado.',
-                    'status' => 403
-                ], 403);
-            }
-            if (!$emailExists) {
-                return response()->json([
-                    'message' => 'Dirección de correo no autorizado.',
-                    'status' => 403
-                ], 403);
-            }
+        // Si no existe una autorización, rechazar el registro
+        if (!$authorization) {
+            return response()->json([
+                'message' => 'El documento o email no están autorizados.',
+                'status' => 403
+            ], 403);
         }
 
-        // Crear el registro de admin
+        // Usar el valor de 'main' de la tabla authorization (convertido a booleano)
+        $main = (bool) ($authorization->main ?? false);
+
+        // Crear el registro de admin con 'main' obtenido de authorization
         $admin = Admin::create([
             'name' => $request->name,
             'no_doc' => $request->no_doc,
             'email' => $request->email,
             'username' => $request->username,
             'password' => Hash::make($request->password),
-            'main' => $request->boolean('main') // Convertir a booleano explícitamente
+            'main' => $main
         ]);
 
         if (!$admin) {
-            $data = [
+            return response()->json([
                 'message' => 'Error al crear el registro de administrador.',
                 'status' => 500
-            ];
-            return response()->json($data, 500);
+            ], 500);
         }
 
         // Responder con éxito
-        $data = [
+        return response()->json([
             'admin' => $admin,
             'status' => 201
-        ];
-        return response()->json($data, 201);
+        ], 201);
     }
 
     public function show($id){

@@ -24,11 +24,11 @@ class MapController extends Controller
             return response()->json($data,404);
         }
         // Transformar los datos para convertir 0/1 en false/true
-        $maps = $maps->map(function ($map) {
-            // Ajusta las columnas booleanas según sea necesario
-            $map->post = (bool) $map->post; 
-            return $map;
-        });
+        // $maps = $maps->map(function ($map) {
+        //     // Ajusta las columnas booleanas según sea necesario
+        //     $map->post = (bool) $map->post; 
+        //     return $map;
+        // });
 
         // Responder con el arreglo transformado y el código 200
         return response()->json($maps, 200);

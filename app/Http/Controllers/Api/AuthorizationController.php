@@ -29,6 +29,7 @@ class AuthorizationController extends Controller
         $validator = Validator::make($request->all(), [
             'no_doc' => 'required|unique:authorization,no_doc',
             'email' => 'required|email|unique:authorization,email',
+            'main' => 'required'
         ]);
 
         if ($validator->fails()) {
@@ -42,6 +43,7 @@ class AuthorizationController extends Controller
         $authorization = Authorization::create([
             'no_doc' => $request->input('no_doc'),
             'email' => $request->input('email'),
+            'main' => $request->input('main'),
         ]);
 
         return response()->json([

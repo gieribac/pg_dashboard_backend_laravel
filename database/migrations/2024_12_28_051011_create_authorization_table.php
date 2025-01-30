@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('no_doc')->unique();
             $table->string('email')->unique();
+            $table->boolean('main');
             $table->timestamps();
         });
     }
