@@ -6,6 +6,7 @@ use App\Models\Admin;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
+use App\Models\Authorization;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
@@ -27,63 +28,81 @@ class AdminController extends Controller
 
     public function store(Request $request)
     {
-        // Validar los datos proporcionados (sin incluir 'main')
-        $validator = Validator::make($request->all(), [
-            'name' => 'required',
-            'no_doc' => 'required|unique:admin,no_doc',
-            'email' => 'required|email|unique:admin,email',
-            'username' => 'required|unique:admin,username',
-            'password' => 'required|string|unique:admin,password'
-        ]);
+        try {
+            // Validar los datos proporcionados (sin incluir 'main')
+            $validator = Validator::make($request->all(), [
+                'name' => 'required',
+                'no_doc' => 'required|unique:admin,no_doc',
+                'email' => 'required|email|unique:admin,email',
+                'username' => 'required|unique:admin,username',
+                'password' => 'required|string|unique:admin,password',
+            ]);
 
-        if ($validator->fails()) {
+            if ($validator->fails()) {
+                return response()->json([
+                    'message' => 'Error en la validación de los datos',
+                    'errors' => $validator->e   rrors(),
+                    'status' => 400
+                ], 400);
+            }
+
+            // Verificar si no hay registros en la tabla 'admin'
+            if (!Admin::exists()) {
+                // Si no hay administradores, el primero será 'main' = true
+                $admin = Admin::create([
+                    'name' => $request->name,
+                    'no_doc' => $request->no_doc,
+                    'email' => $request->email,
+                    'username' => $request->username,
+                    'password' => Hash::make($request->password),
+                    'main' => true
+                ]);
+
+                return response()->json([
+                    'admin' => $admin,
+                    'status' => 201
+                ], 201);
+            }
+
+            // Obtener el valor de 'main' desde la tabla 'authorization'
+            $authorization = Authorization::where('no_doc', $request->no_doc)
+                ->where('email', $request->email)
+                ->first();
+
+            if (!$authorization) {
+                return response()->json([
+                    'message' => 'El documento o email no están autorizados.',
+                    'status' => 403
+                ], 403);
+            }
+
+            // Convertir el valor de 'main' a booleano
+            $main = (bool) ($authorization->main ?? false);
+
+            // Crear el nuevo registro admin
+            $admin = Admin::create([
+                'name' => $request->name,
+                'no_doc' => $request->no_doc,
+                'email' => $request->email,
+                'username' => $request->username,
+                'password' => Hash::make($request->password),
+                'main' => $main
+            ]);
+
             return response()->json([
-                'message' => 'Error en la validación de los datos',
-                'errors' => $validator->errors(),
-                'status' => 400
-            ], 400);
-        }
+                'admin' => $admin,
+                'status' => 201
+            ], 201);
 
-        // Obtener el valor de 'main' desde la tabla 'authorization'
-        $authorization = DB::table('authorization')
-            ->where('no_doc', $request->no_doc)
-            ->where('email', $request->email)
-            ->first(); // Obtener el primer registro coincidente
-
-        // Si no existe una autorización, rechazar el registro
-        if (!$authorization) {
+        } catch (\Exception $e) {
             return response()->json([
-                'message' => 'El documento o email no están autorizados.',
-                'status' => 403
-            ], 403);
-        }
-
-        // Usar el valor de 'main' de la tabla authorization (convertido a booleano)
-        $main = (bool) ($authorization->main ?? false);
-
-        // Crear el registro de admin con 'main' obtenido de authorization
-        $admin = Admin::create([
-            'name' => $request->name,
-            'no_doc' => $request->no_doc,
-            'email' => $request->email,
-            'username' => $request->username,
-            'password' => Hash::make($request->password),
-            'main' => $main
-        ]);
-
-        if (!$admin) {
-            return response()->json([
-                'message' => 'Error al crear el registro de administrador.',
+                'message' => 'Error al procesar la solicitud.',
+                'error' => $e->getMessage(),
                 'status' => 500
             ], 500);
         }
-
-        // Responder con éxito
-        return response()->json([
-            'admin' => $admin,
-            'status' => 201
-        ], 201);
     }
+
 
     public function show($id){
         $admin = Admin::find($id);
