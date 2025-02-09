@@ -44,7 +44,7 @@ class AdminAuthController extends Controller
                 'username' => $admin->username,
                 'email' => $admin->email,
             ]
-        ]);
+        ],200);
     }
 
     /**
@@ -69,48 +69,57 @@ class AdminAuthController extends Controller
      * @return \Illuminate\Http\JsonResponse
      */
     public function me()
-    {
-        $admin = JWTAuth::user();
-        return response()->json(['admin' => $admin]);
+    {   try {
+            $admin = JWTAuth::user();
+            return response()->json(['admin' => $admin],200);
+        }catch(\Exception $e) {
+            return response()->json([ 'message' => 'No autorizado'],401); 
+        }
     }
     
     public function updatePassword(Request $request)
     {
-        // Obtener el usuario autenticado desde el token JWT
-        $admin = JWTAuth::user();
+        try {
+            // Obtener el usuario autenticado desde el token JWT
+            $admin = JWTAuth::user();
 
-        if (!$admin) {
-            return response()->json([
-                'message' => 'Usuario no autenticado.',
-            ], 401);
-        }
+            if (!$admin) {
+                return response()->json([
+                    'message' => 'Usuario no autenticado.',
+                ], 401);
+            }
 
-        // Validar los datos del request
-        $validated = $request->validate([
-            'pass1' => 'required|string',
-            'pass2' => 'required|string|unique:admin,password',
-        ]);
+            // Validar los datos del request
+            $validated = $request->validate([
+                'pass1' => 'required|string',
+                'pass2' => 'required|string|unique:admin,password',
+            ]);
 
-        // Verificar que pass1 coincida con la contraseña guardada
-        if (!Hash::check($validated['pass1'], $admin->password)) {
+            // Verificar que pass1 coincida con la contraseña guardada
+            if (!Hash::check($validated['pass1'], $admin->password)) {
+                return response()->json([
+                    'message' => 'La contraseña de verificación no coincide.',
+                ], 403);
+            }
+            // Verificar si pass1 y pass2 son iguales (antes de hashearlas)
+            if ($validated['pass1'] === $validated['pass2']) {
+                return response()->json([
+                    'message' => 'La nueva contraseña no puede ser igual a la actual.',
+                ], 422);
+            }
+            $this->logout();
+            // Actualizar la contraseña
+            $admin->password = Hash::make($validated['pass2']);
+            $admin->save();
+            
             return response()->json([
-                'message' => 'La contraseña de verificación no coincide.',
-            ], 403);
-        }
-        // Verificar si pass1 y pass2 son iguales (antes de hashearlas)
-        if ($validated['pass1'] === $validated['pass2']) {
+                'message' => 'Contraseña actualizada exitosamente.',
+            ], 200);
+        } catch(\Exception $e){
             return response()->json([
-                'message' => 'La nueva contraseña no puede ser igual a la actual.',
-            ], 422);
+                'message' => 'Error inesperado',
+            ], 500);
         }
-        $this->logout();
-        // Actualizar la contraseña
-        $admin->password = Hash::make($validated['pass2']);
-        $admin->save();
-        
-        return response()->json([
-            'message' => 'Contraseña actualizada exitosamente.',
-        ], 200);
     }
     //borrar un registro de admin
     

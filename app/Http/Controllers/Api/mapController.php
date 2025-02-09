@@ -11,27 +11,39 @@ use Illuminate\Validation\ValidationException;
 class MapController extends Controller
 {
     //query bd
-    public function index(){
-        //llamar el modelo Maps y retornar all() si el arreglo esta vacio
-        $maps = Map::all(); 
-        
-        //condicionar si el arreglo está vacío
-        if ($maps->isEmpty()) {
-            $data = [
-                'messaje'=>'no hay mapas registrados',
-                'status'=> 404,
-            ];
-            return response()->json($data,404);
-        }
-        // Transformar los datos para convertir 0/1 en false/true
-        // $maps = $maps->map(function ($map) {
-        //     // Ajusta las columnas booleanas según sea necesario
-        //     $map->post = (bool) $map->post; 
-        //     return $map;
-        // });
+    public function index(Request $request)
+    {
+        $filter = $request->query('filter');
 
-        // Responder con el arreglo transformado y el código 200
+        $maps = $this->getMapsByRequest($filter);
+
+        if ($maps === null) {
+            return response()->json([
+                'message' => 'Formato de petición no válido',
+                'status' => 400,
+            ], 400);
+        }
+
+        if ($maps->isEmpty()) {
+            return response()->json([
+                'message' => 'No hay mapas registrados',
+                'status' => 404,
+            ], 404);
+        }
+
         return response()->json($maps, 200);
+    }
+
+    /**
+     * Obtiene los mapas según el contenido de filter
+     */
+    private function getMapsByRequest(?string $filter)
+    {
+        return match ($filter) {
+            null, '' => Map::all(), 
+            'public' => Map::where('post', true)->get(),
+            default  => null 
+        };
     }
 
     //write bd

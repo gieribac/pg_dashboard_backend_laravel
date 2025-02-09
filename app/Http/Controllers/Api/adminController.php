@@ -13,6 +13,7 @@ use Illuminate\Validation\ValidationException;
 
 class AdminController extends Controller
 {
+    //consultar administradores
     public function index(){
         $admins = Admin::all(); 
         
@@ -26,6 +27,7 @@ class AdminController extends Controller
         return response()->json($admins,200);
     }
 
+    //registrar administrador
     public function store(Request $request)
     {
         try {
@@ -41,7 +43,7 @@ class AdminController extends Controller
             if ($validator->fails()) {
                 return response()->json([
                     'message' => 'Error en la validación de los datos',
-                    'errors' => $validator->e   rrors(),
+                    'errors' => $validator->errors(),
                     'status' => 400
                 ], 400);
             }
