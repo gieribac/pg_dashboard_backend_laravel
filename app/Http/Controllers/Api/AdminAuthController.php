@@ -122,7 +122,7 @@ class AdminAuthController extends Controller
         }
     }
     //borrar un registro de admin
-    
+   
     public function destroy(Request $request, $id)
     {
         // Buscar el administrador por ID
@@ -139,7 +139,7 @@ class AdminAuthController extends Controller
             'password' => 'required|string',
         ]);
 
-        // Verificar que la contraseña proporcionada coincida con la contraseña almacenada
+        // Verificar que la contraseña proporcionada coincida con la almacenada
         if (!Hash::check($validated['password'], $admin->password)) {
             return response()->json([
                 'message' => 'La contraseña de verificación no coincide.',
@@ -152,10 +152,27 @@ class AdminAuthController extends Controller
             ], 403);
         }
 
-        $this->logout();
+        // Verificar si el administrador es el único con "main = true"
+        if ($admin->main && Admin::where('main', true)->count() == 1) {
+            return response()->json([
+                'message' => 'No puedes eliminar tu cuenta, eres el único Administrador Principal.',
+            ], 403);
+        }
+
         // Eliminar el administrador
         $admin->delete();
-        // Respuesta clara al cliente
+
+        // Verificar si queda solo un administrador en el sistema
+        if (Admin::count() == 1) {
+            $lastAdmin = Admin::first();
+            if (!$lastAdmin->main) {
+                $lastAdmin->main = true;
+                $lastAdmin->save();
+            }
+        }
+
+        $this->logout();
+
         return response()->json([
             'message' => 'Cuenta eliminada exitosamente.',
             'status' => 200,

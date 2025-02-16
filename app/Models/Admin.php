@@ -18,6 +18,11 @@ class Admin extends Authenticatable implements JWTSubject
         'main'
     ];
     
+    protected $casts = [
+        'main' => 'boolean',
+    ];
+
+    
     /**
      * The attributes that should be hidden for serialization.
      *
